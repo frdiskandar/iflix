@@ -1,4 +1,6 @@
-// REST helpers for watch-together rooms (same-origin /api/v1/rooms).
+// REST helpers for watch-together rooms (backend /api/v1/rooms,
+// resolved against the backend origin so split deployments work).
+import { backendUrl } from '../lib/api.ts';
 
 export interface CreatedRoom {
   room_code: string
@@ -25,9 +27,9 @@ async function readError(res: Response): Promise<string> {
 }
 
 export async function createRoom(username: string, signal?: AbortSignal): Promise<CreatedRoom> {
-  const res = await fetch('/api/v1/rooms', {
+  const res = await fetch(backendUrl('/api/v1/rooms'), {
     method: 'POST',
-    credentials: 'same-origin',
+    credentials: 'include',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     body: JSON.stringify({ username }),
     signal,
@@ -37,8 +39,8 @@ export async function createRoom(username: string, signal?: AbortSignal): Promis
 }
 
 export async function roomInfo(code: string, signal?: AbortSignal): Promise<RoomInfo> {
-  const res = await fetch(`/api/v1/rooms/${encodeURIComponent(code)}`, {
-    credentials: 'same-origin',
+  const res = await fetch(backendUrl(`/api/v1/rooms/${encodeURIComponent(code)}`), {
+    credentials: 'include',
     headers: { Accept: 'application/json' },
     signal,
   })
