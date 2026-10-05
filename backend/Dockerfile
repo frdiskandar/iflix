@@ -20,8 +20,8 @@ RUN adduser -D -H appuser \
 WORKDIR /app
 COPY --from=builder /bin/server /app/server
 
-# Optional local fallback video (ignored if absent in build context).
-# COPY default-video.mp4 /app/default-video.mp4
+# Local fallback video served at /default-video.mp4.
+COPY default-video.mp4 /app/default-video.mp4
 
 USER appuser
 EXPOSE 8080

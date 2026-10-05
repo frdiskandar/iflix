@@ -2,7 +2,9 @@
 // Mirrors the backend classifyVideo rules: YouTube watch/share/embed/
 // shorts URLs play via the IFrame adapter, anything else via <video>.
 
-const DEFAULT_VIDEO = (import.meta.env.VITE_DEFAULT_VIDEO_URL as string | undefined) ?? '/default-video.mp4'
+import { backendUrl } from "../lib/api";
+
+const DEFAULT_VIDEO = (import.meta.env.VITE_DEFAULT_VIDEO_URL as string | undefined) ?? backendUrl('default-video.mp4')
 
 export function defaultVideoUrl(): string {
   return DEFAULT_VIDEO
