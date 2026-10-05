@@ -1,0 +1,25 @@
+# Local dev services. The app itself is NOT run here: per AGENTS.md run
+# the frontend (`cd frontend && npm run dev`) and backend
+# (`cd backend && go run ./cmd/server`) separately.
+#
+# This file only provides RabbitMQ for watch-together pub/sub.
+# Without it the backend runs fully local (RABBITMQ_URL unset).
+# Point the backend at it with:
+#   RABBITMQ_URL=amqp://guest:guest@localhost:5672/ go run ./cmd/server
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"   # AMQP (RABBITMQ_URL)
+      - "15672:15672" # management UI: http://localhost:15672 (guest/guest)
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  rabbitmq-data:

@@ -1,0 +1,19 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Home (public read-only)",
+    "version": "1.1.0"
+  },
+  "servers": [{ "url": "https://z2.idlixku.com/api" }],
+  "paths": {
+    "/homepage": { "get": { "summary": "Homepage modules. Shape: {above:[{type,title,data:[{content,...}]}]} — extract data[].content for cards" } },
+    "/movies": { "get": { "summary": "List movies. Query: page, limit, genre, year, sort, country" } },
+    "/series": { "get": { "summary": "List TV series. Query: page, limit" } },
+    "/browse": { "get": { "summary": "Mixed movie+series. Query: type, limit" } },
+    "/search/trending": { "get": { "summary": "Trending keywords: {trending:string[], trendingDetails:[{query,rank}]} — chips only, not cards" } },
+    "/trending/top": { "get": { "summary": "Real trending cards: {data:[{id,title,slug,posterPath,...}]}. Use for Top 10 row" } },
+    "/collections": { "get": { "summary": "Universe/franchise list: {collections:[...]}" } },
+    "/genres": { "get": { "summary": "Genre chips: {data:[{id,name,slug}]}" } },
+    "/leaderboard": { "get": { "summary": "Top of month: {month, topMovies:[...], topSeries?}" } }
+  }
+}

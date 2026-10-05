@@ -1,0 +1,60 @@
+{
+  "protocol": "rooms-ws-v1",
+  "transport": "GET /ws/rooms/{code}?username=<name>&master_key=<optional>",
+  "notes": [
+    "Field names use snake_case. Every message carries a `type` discriminator.",
+    "No JWT: identity is a self-claimed username (localStorage). Creator holds master_key to reclaim master.",
+    "Backend owns playback state {video_url, video_type, position_ms, playing, updated_at, version}.",
+    "Conflicts resolve last-writer-wins by arrival order in the room goroutine; ties broken by server time (updated_at).",
+    "Clients derive current position as position_ms + (now - updated_at) while playing. The player element is a view.",
+    "Seek messages are debounced ~200ms client-side; echoes are ignored by client_msg_id."
+  ],
+  "client_to_server": {
+    "join": {
+      "type": "join",
+      "username": "string 1-20 chars",
+      "master_key": "string, optional"
+    },
+    "control": {
+      "type": "control",
+      "action": "play | pause | seek | change_video",
+      "video_url": "string, required for change_video",
+      "position_ms": "integer >= 0",
+      "client_msg_id": "string, optional idempotency key"
+    },
+    "permission": {
+      "type": "permission",
+      "allow_all_control": "boolean (master only)",
+      "client_msg_id": "string, optional"
+    },
+    "chat": {
+      "type": "chat",
+      "text": "string 1-500 chars",
+      "client_msg_id": "string, optional"
+    }
+  },
+  "server_to_clients": {
+    "joined": { "type": "joined", "username": "assigned (deduped) name", "is_master": "boolean" },
+    "state_sync": {
+      "type": "state_sync",
+      "video_url": "string",
+      "video_type": "none | direct | youtube",
+      "video_id": "youtube id when youtube",
+      "allow_all": "permission toggle mirror",
+      "position_ms": "integer",
+      "playing": "boolean",
+      "updated_at": "server unix millis",
+      "version": "monotonic uint"
+    },
+    "members": { "type": "members", "members": [{ "username": "string", "is_master": "boolean" }] },
+    "history": { "type": "history", "messages": "last <=50 chat messages" },
+    "chat": { "type": "chat", "username": "string", "text": "string", "at": "server unix millis", "seq": "uint" },
+    "notice": { "type": "notice", "kind": "join | leave | master | permission", "text": "string" },
+    "error": { "type": "error", "code": "forbidden | bad_action | bad_video_url | bad_message | bad_username | not_found", "text": "string" }
+  },
+  "rest": {
+    "POST /api/v1/rooms": { "body": { "username": "string" }, "201": { "room_code": "6 chars", "master_key": "hex" } },
+    "GET /api/v1/rooms/{code}": { "200": { "room_code": "string", "members": "int", "has_video": "bool", "video_type": "string", "allow_all": "bool", "master": "string" } },
+    "GET /default-video.mp4": { "200": "video/mp4 with Accept-Ranges (seekable)" }
+  }
+}
