@@ -182,6 +182,9 @@ func (r *Room) applyControl(username string, msg ControlMsg, now time.Time) (Sta
 		if url == "" {
 			return StateSyncMsg{}, false, "bad_video_url"
 		}
+		if embed := youtubeEmbedURL(url); embed != "" {
+			url = embed
+		}
 		r.state.VideoURL = url
 		r.state.VideoType, r.state.VideoID = classifyVideo(url)
 		r.state.PositionMs = 0
@@ -335,23 +338,35 @@ func classifyVideo(raw string) (typ, id string) {
 	return VideoNone, ""
 }
 
+// youtubeEmbedURL returns the canonical embed form for any supported
+// YouTube link (https://www.youtube.com/embed/{id}), or "" when the input
+// is not a recognized YouTube URL. Tracking params (?si=, &t=, ...) are dropped.
+func youtubeEmbedURL(raw string) string {
+	if vid := youtubeID(raw); vid != "" {
+		return "https://www.youtube.com/embed/" + vid
+	}
+	return ""
+}
+
 // youtubeID extracts the 11-char video id from common YouTube URL forms.
 func youtubeID(raw string) string {
 	s := strings.TrimSpace(raw)
 	lower := strings.ToLower(s)
 	candidates := []string{}
-	switch {
-	case strings.Contains(lower, "youtube.com/watch"):
+	if strings.Contains(lower, "youtube.com/watch") {
 		candidates = append(candidates, queryParam(s, "v"))
-	case strings.Contains(lower, "youtu.be/"):
+	}
+	if strings.Contains(lower, "youtu.be/") {
 		if i := strings.Index(lower, "youtu.be/"); i >= 0 {
 			candidates = append(candidates, s[i+len("youtu.be/"):])
 		}
-	case strings.Contains(lower, "youtube.com/embed/"):
+	}
+	if strings.Contains(lower, "youtube.com/embed/") {
 		if i := strings.Index(lower, "youtube.com/embed/"); i >= 0 {
 			candidates = append(candidates, s[i+len("youtube.com/embed/"):])
 		}
-	case strings.Contains(lower, "youtube.com/shorts/"):
+	}
+	if strings.Contains(lower, "youtube.com/shorts/") {
 		if i := strings.Index(lower, "youtube.com/shorts/"); i >= 0 {
 			candidates = append(candidates, s[i+len("youtube.com/shorts/"):])
 		}
@@ -359,7 +374,14 @@ func youtubeID(raw string) string {
 	for _, c := range candidates {
 		c = strings.SplitN(c, "?", 2)[0]
 		c = strings.SplitN(c, "&", 2)[0]
-		c = strings.SplitN(c, "/", 2)[0]
+		c = strings.SplitN(c, "#", 2)[0]
+		// Tolerate the mistaken youtu.be/embed/{id} form.
+		if strings.HasPrefix(strings.ToLower(c), "embed/") {
+			c = c[len("embed/"):]
+			c = strings.SplitN(c, "/", 2)[0]
+		} else {
+			c = strings.SplitN(c, "/", 2)[0]
+		}
 		if len(c) == 11 {
 			return c
 		}

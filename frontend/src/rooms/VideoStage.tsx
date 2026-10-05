@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { currentPosition, type ControlAction, type RoomPlayback } from '../hooks/useRoomSocket.ts'
 import DirectVideo, { type PlayerHandle } from './DirectVideo.tsx'
 import YouTubeVideo from './YouTubeVideo.tsx'
-import { effectiveSource } from './videoLinks.ts'
+import { effectiveSource, normalizeVideoUrl } from './videoLinks.ts'
 
 interface VideoStageProps {
   state: RoomPlayback | null
@@ -137,7 +137,7 @@ export default function VideoStage({ state, canControl, control }: VideoStagePro
         className="room-linkform"
         onSubmit={(e) => {
           e.preventDefault()
-          const url = urlInput.trim()
+          const url = normalizeVideoUrl(urlInput)
           if (url && canControl) {
             control('change_video', { videoUrl: url, force: true })
             setUrlInput('')
