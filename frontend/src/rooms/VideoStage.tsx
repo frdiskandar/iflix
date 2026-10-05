@@ -21,12 +21,14 @@ function fmt(ms: number): string {
 
 export default function VideoStage({ state, canControl, control }: VideoStageProps) {
   const player = useRef<PlayerHandle | null>(null)
+  const screenRef = useRef<HTMLDivElement>(null)
   const appliedVersion = useRef(-1)
   const [posMs, setPosMs] = useState(0)
   const [durationMs, setDurationMs] = useState<number | null>(null)
   const [scrub, setScrub] = useState<number | null>(null)
   const [needsGesture, setNeedsGesture] = useState(false)
   const [urlInput, setUrlInput] = useState('')
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   const src = effectiveSource(state?.video_url ?? '')
   const sourceId = `${src.type}:${src.id}`
@@ -80,9 +82,32 @@ export default function VideoStage({ state, canControl, control }: VideoStagePro
     if (canControl) control('pause', { positionMs: d ?? undefined, force: true })
   }
 
+  // Fullscreen is local-only (not room-synced): it just enlarges the view.
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(Boolean(document.fullscreenElement))
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
+
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => {})
+      return
+    }
+    const el = screenRef.current
+    if (!el) return
+    const req = el.requestFullscreen?.bind(el) as (() => Promise<void>) | undefined
+    if (req) {
+      void req().catch(() => {})
+      return
+    }
+    const webkit = el as HTMLDivElement & { webkitRequestFullscreen?: () => void }
+    webkit.webkitRequestFullscreen?.()
+  }
+
   return (
     <section className="room-stage">
-      <div className="room-screen">
+      <div ref={screenRef} className="room-screen" onDoubleClick={toggleFullscreen}>
         {src.type === 'youtube' ? (
           <YouTubeVideo key={sourceId} ref={player} videoId={src.id} onEnded={onEnded} onDuration={setDurationMs} />
         ) : (
@@ -117,6 +142,9 @@ export default function VideoStage({ state, canControl, control }: VideoStagePro
         <span className="room-time">
           {fmt(nowMs)} / {durationMs ? fmt(durationMs) : '--:--'}
         </span>
+        <button type="button" onClick={toggleFullscreen} aria-label={isFullscreen ? 'Keluar fullscreen' : 'Fullscreen'}>
+          {isFullscreen ? '⛶ Keluar' : '⛶ Fullscreen'}
+        </button>
         <input
           className="room-seek"
           type="range"

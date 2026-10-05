@@ -114,7 +114,7 @@ const YouTubeVideo = forwardRef<PlayerHandle, YouTubeProps>(function YouTubeVide
         if (dead || !host.current) return
         player.current = new yt.Player(host.current, {
           videoId,
-          playerVars: { rel: 0, playsinline: 1 },
+          playerVars: { rel: 0, playsinline: 1, fs: 1 },
           events: {
             onReady: () => {
               try {
