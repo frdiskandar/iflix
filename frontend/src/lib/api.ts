@@ -1,10 +1,28 @@
 // API client for same-origin backend proxy (/api/upstream/*).
 // Base URL is configured via .env (VITE_API_BASE_URL). Frontend only displays data.
+// Default is the same-origin proxy path (Vite dev forwards it to :8080,
+// Docker nginx proxies it to backend). Never call the third-party API
+// directly from the browser: it sends no Access-Control-Allow-Origin.
 
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? 'https://z2.idlixku.com/api'
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '/api/upstream'
 
 export function apiUrl(path: string): string {
   return `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`
+}
+
+// Backend origin root derived from BASE_URL by stripping the
+// /api/upstream mount (all configs end with it). Used for endpoints
+// outside the upstream proxy (e.g. /api/v1/rooms): '' in same-origin
+// setups, absolute origin when frontend and backend are split.
+function backendRoot(): string {
+  const suffix = '/api/upstream'
+  if (BASE_URL.endsWith(suffix)) return BASE_URL.slice(0, -suffix.length)
+  return BASE_URL
+}
+
+export function backendUrl(path: string): string {
+  const root = backendRoot()
+  return `${root}${path.startsWith('/') ? path : `/${path}`}`
 }
 
 export class ApiError extends Error {
