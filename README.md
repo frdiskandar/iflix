@@ -2,9 +2,12 @@
 
 **Tech Stack:** React 19 + Vite 8 + TypeScript + React Router 8 · Go (stdlib) + Gorilla WebSocket · Redis · RabbitMQ · Docker Compose · Nginx
 
-![Demo IFLIX](./iflix.mp4)
 
-## Deskripsi Singkat
+https://github.com/user-attachments/assets/dc369519-c797-4ce3-b380-f2411b17069a
+
+
+
+## Deskripsi
 
 Clone streaming ala Netflix/IFLIX dengan fitur **watch-together**: satu room menonton satu video di posisi yang sama. Semua anggota room bisa `play` / `pause` / `seek` / `change video`, dan backend menjadi otoritas tunggal yang menyebarkan state authoritative via WebSocket ke semua anggota.
 
