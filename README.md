@@ -24,7 +24,7 @@ Konten film/series diambil dari upstream API (`z2.idlixku.com`) lewat proxy Go b
 ### 1. Clone & env
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/frdiskandar/iflix.git
 cd netflix-clone
 cp .env.example .env
 cp backend/.env.example backend/.env
