@@ -1,4 +1,4 @@
-# IFLIX Clone — Watch Together Streaming Platform
+# IFLIX — Watch Together Streaming Platform
 
 **Tech Stack:** React 19 + Vite 8 + TypeScript + React Router 8 · Go (stdlib) + Gorilla WebSocket · Redis · RabbitMQ · Docker Compose · Nginx
 
@@ -9,7 +9,7 @@ https://github.com/user-attachments/assets/dc369519-c797-4ce3-b380-f2411b17069a
 
 ## Deskripsi
 
-Clone streaming ala Netflix/IFLIX dengan fitur **watch-together**: satu room menonton satu video di posisi yang sama. Semua anggota room bisa `play` / `pause` / `seek` / `change video`, dan backend menjadi otoritas tunggal yang menyebarkan state authoritative via WebSocket ke semua anggota.
+Clone streaming ala Netflix dengan fitur **watch-together**: satu room menonton satu video di posisi yang sama. Semua anggota room bisa `play` / `pause` / `seek` / `change video`, dan backend menjadi otoritas tunggal yang menyebarkan state authoritative via WebSocket ke semua anggota.
 
 Konten film/series diambil dari upstream API (`z2.idlixku.com`) lewat proxy Go backend (`/api/upstream/*`) dengan cache 1 jam (Redis kalau ada, kalau tidak in-memory). Alur nonton mengikuti gate upstream: `play-info` → countdown → `claim` → `redeem` ke Pentos.
 
