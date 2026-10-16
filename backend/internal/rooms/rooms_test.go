@@ -169,6 +169,29 @@ func TestYoutubeIDForms(t *testing.T) {
 	}
 }
 
+func TestClassifyVideoForms(t *testing.T) {
+	cases := map[string]string{
+		"https://www.youtube.com/watch?v=dQw4w9WgXcQ": "youtube",
+		"https://youtu.be/dQw4w9WgXcQ":                "youtube",
+		"https://www.youtube.com/embed/dQw4w9WgXcQ":   "youtube",
+		"https://example.com/video.mp4":               "direct",
+		"https://example.com/clip.webm?token=abc":     "direct",
+		"https://playmogo.com/e/4p8sz0oaefzf":         "embed",
+		"https://example.com/watch/123":               "embed",
+		"":                                            "none",
+		"   ":                                         "none",
+	}
+	for in, want := range cases {
+		typ, _ := classifyVideo(in)
+		if typ != want {
+			t.Fatalf("classifyVideo(%q) = %q, want %q", in, typ, want)
+		}
+	}
+	if typ, id := classifyVideo("https://playmogo.com/e/4p8sz0oaefzf"); typ != VideoEmbed || id == "" {
+		t.Fatalf("embed classify = (%q, %q)", typ, id)
+	}
+}
+
 func TestMarkSeenIdempotent(t *testing.T) {
 	r := testRoom()
 	if r.markSeen("a") {

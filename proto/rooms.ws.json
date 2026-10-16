@@ -38,8 +38,9 @@
     "state_sync": {
       "type": "state_sync",
       "video_url": "string",
-      "video_type": "none | direct | youtube",
-      "video_id": "youtube id when youtube",
+      "video_type": "none | direct | youtube | embed",
+      "video_id": "youtube id when youtube, else the (possibly normalized) video_url",
+      "embed_note": "embed = generic third-party iframe (e.g. playmogo /e/ links); the room cannot drive playback inside it, state is informational only",
       "allow_all": "permission toggle mirror",
       "position_ms": "integer",
       "playing": "boolean",

@@ -35,6 +35,7 @@ const (
 const (
 	VideoDirect  = "direct"
 	VideoYouTube = "youtube"
+	VideoEmbed   = "embed"
 	VideoNone    = "none"
 )
 
@@ -92,6 +93,7 @@ type Member struct {
 // StateSyncMsg is the authoritative playback state. Clients derive
 // current position as position_ms + elapsed-since updated_at when
 // playing is true; the <video>/YT player is a view, never the source.
+// Generic embeds (<iframe>) cannot be driven at all: state is informational.
 type StateSyncMsg struct {
 	Type      string `json:"type"`
 	VideoURL  string `json:"video_url"`

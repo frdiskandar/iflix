@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { currentPosition, type ControlAction, type RoomPlayback } from '../hooks/useRoomSocket.ts'
 import DirectVideo, { type PlayerHandle } from './DirectVideo.tsx'
 import YouTubeVideo from './YouTubeVideo.tsx'
+import EmbedVideo from './EmbedVideo.tsx'
 import { effectiveSource, normalizeVideoUrl } from './videoLinks.ts'
 
 interface VideoStageProps {
@@ -32,6 +33,9 @@ export default function VideoStage({ state, canControl, control }: VideoStagePro
 
   const src = effectiveSource(state?.video_url ?? '')
   const sourceId = `${src.type}:${src.id}`
+  // Generic embeds (<iframe>) expose no playback API: the room clock
+  // stays the time source and no drift/play-state correction is attempted.
+  const isEmbed = src.type === 'embed'
 
   // Apply each new authoritative version once: load position then play/pause.
   useEffect(() => {
@@ -55,6 +59,7 @@ export default function VideoStage({ state, canControl, control }: VideoStagePro
       const d = p.durationMs()
       if (d && d !== durationMs) setDurationMs(d)
       if (scrub !== null) return
+      if (isEmbed) return
       if (Math.abs(p.getTimeMs() - expected) > 2500) p.seekTo(expected)
       const paused = p.isPaused()
       if (state.playing && paused) {
@@ -67,7 +72,7 @@ export default function VideoStage({ state, canControl, control }: VideoStagePro
       }
     }, 1000)
     return () => window.clearInterval(id)
-  }, [state, scrub, durationMs])
+  }, [state, scrub, durationMs, isEmbed])
 
   const nowMs = scrub ?? posMs
   const max = durationMs ?? Math.max(nowMs, 1)
@@ -110,6 +115,8 @@ export default function VideoStage({ state, canControl, control }: VideoStagePro
       <div ref={screenRef} className="room-screen" onDoubleClick={toggleFullscreen}>
         {src.type === 'youtube' ? (
           <YouTubeVideo key={sourceId} ref={player} videoId={src.id} onEnded={onEnded} onDuration={setDurationMs} />
+        ) : src.type === 'embed' ? (
+          <EmbedVideo key={sourceId} ref={player} src={src.id} playing={state?.playing ?? false} />
         ) : (
           <DirectVideo key={sourceId} ref={player} src={src.id} onEnded={onEnded} onDuration={setDurationMs} />
         )}
@@ -174,7 +181,7 @@ export default function VideoStage({ state, canControl, control }: VideoStagePro
       >
         <input
           type="url"
-          placeholder="Tempel link YouTube / video lalu Enter"
+          placeholder="Tempel link YouTube / embed / video lalu Enter"
           value={urlInput}
           disabled={!canControl}
           onChange={(e) => setUrlInput(e.target.value)}
@@ -184,6 +191,9 @@ export default function VideoStage({ state, canControl, control }: VideoStagePro
           Set video
         </button>
       </form>
+      {isEmbed ? (
+        <p className="room-hint">Mode embed: isi iframe berjalan sendiri — play/pause/seek room hanya tercatat sebagai status, tidak mengendalikan iframe.</p>
+      ) : null}
       {!canControl ? <p className="room-hint">Hanya master room yang bisa mengontrol. Minta master mengaktifkan izin semua user.</p> : null}
     </section>
   )

@@ -326,16 +326,42 @@ func clampPosition(ms int64) int64 {
 }
 
 // classifyVideo maps a user-supplied link to a player type.
-// YouTube watch/share/embed URLs become youtube+id; anything else is a
-// direct video URL handed to <video>.
+// YouTube watch/share/embed URLs become youtube+id; raw video files
+// (.mp4, .webm, ...) become direct URLs handed to <video>; anything
+// else (e.g. https://playmogo.com/e/xxxx) becomes an embed URL
+// rendered in an <iframe> the room cannot drive (view only).
 func classifyVideo(raw string) (typ, id string) {
 	if v := strings.TrimSpace(raw); v != "" {
 		if vid := youtubeID(v); vid != "" {
 			return VideoYouTube, vid
 		}
-		return VideoDirect, raw
+		if isDirectVideoURL(v) {
+			return VideoDirect, v
+		}
+		return VideoEmbed, v
 	}
 	return VideoNone, ""
+}
+
+// directVideoExts are path suffixes playable by a plain <video> element.
+var directVideoExts = []string{".mp4", ".webm", ".ogg", ".ogv", ".m3u8", ".mpd", ".mov", ".m4v"}
+
+// isDirectVideoURL reports whether raw looks like a raw video file
+// (extension check on the path, query/fragment ignored).
+func isDirectVideoURL(raw string) bool {
+	s := strings.ToLower(strings.TrimSpace(raw))
+	if i := strings.Index(s, "?"); i >= 0 {
+		s = s[:i]
+	}
+	if i := strings.Index(s, "#"); i >= 0 {
+		s = s[:i]
+	}
+	for _, ext := range directVideoExts {
+		if strings.HasSuffix(s, ext) {
+			return true
+		}
+	}
+	return false
 }
 
 // youtubeEmbedURL returns the canonical embed form for any supported

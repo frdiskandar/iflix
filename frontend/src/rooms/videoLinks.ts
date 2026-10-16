@@ -1,6 +1,7 @@
 // Video link helpers for watch-together rooms.
 // Mirrors the backend classifyVideo rules: YouTube watch/share/embed/
-// shorts URLs play via the IFrame adapter, anything else via <video>.
+// shorts URLs play via the IFrame adapter, raw video files via <video>,
+// anything else (e.g. playmogo /e/ links) via a generic <iframe>.
 
 import { backendUrl } from "../lib/api";
 
@@ -10,7 +11,7 @@ export function defaultVideoUrl(): string {
   return DEFAULT_VIDEO
 }
 
-export type RoomVideoType = 'none' | 'direct' | 'youtube'
+export type RoomVideoType = 'none' | 'direct' | 'youtube' | 'embed'
 
 export function youtubeId(raw: string): string {
   const s = raw.trim()
@@ -42,7 +43,21 @@ export function classifyLink(raw: string): { type: RoomVideoType; id: string } {
   if (!url) return { type: 'none', id: '' }
   const vid = youtubeId(url)
   if (vid) return { type: 'youtube', id: vid }
-  return { type: 'direct', id: url }
+  if (isDirectVideoUrl(url)) return { type: 'direct', id: url }
+  return { type: 'embed', id: url }
+}
+
+// Path suffixes playable by a plain <video> element; anything else
+// non-YouTube is treated as a generic embed page (<iframe>).
+const DIRECT_EXTS = ['.mp4', '.webm', '.ogg', '.ogv', '.m3u8', '.mpd', '.mov', '.m4v']
+
+export function isDirectVideoUrl(raw: string): boolean {
+  let s = raw.trim().toLowerCase()
+  const q = s.indexOf('?')
+  if (q >= 0) s = s.slice(0, q)
+  const h = s.indexOf('#')
+  if (h >= 0) s = s.slice(0, h)
+  return DIRECT_EXTS.some((ext) => s.endsWith(ext))
 }
 
 // Canonical embed URL for any supported YouTube link.
