@@ -1,5 +1,5 @@
 :root {
-  --netflix-black: #141414;
+  --netflix-black:  #0A0A0A;
   --netflix-red: #e50914;
   --text-color: #ffffff;
   --secondary-text: #808080;
@@ -187,7 +187,7 @@ nav a:hover {
   top: 0;
   left: 4%;
   right: 4%;
-
+  height: 1px;
   background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.25), transparent);
   border-top-left-radius: 50% 100%;
   border-top-right-radius: 50% 100%;

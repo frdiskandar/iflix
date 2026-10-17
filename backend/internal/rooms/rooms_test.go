@@ -109,6 +109,37 @@ func TestControlGating(t *testing.T) {
 	}
 }
 
+func TestLoopToggleMasterOnly(t *testing.T) {
+	r := testRoom()
+	r.join("alice", "")
+	r.join("bob", "")
+	now := time.Now()
+
+	if ok, code := r.applyLoop("bob", true); ok || code != "forbidden" {
+		t.Fatalf("non-master loop toggle = (%v, %q), want (false, forbidden)", ok, code)
+	}
+	if st := r.currentSync(); st.LoopEnabled {
+		t.Fatal("loop flipped by non-master")
+	}
+	if ok, _ := r.applyLoop("alice", true); !ok {
+		t.Fatal("master loop enable rejected")
+	}
+	if st := r.currentSync(); !st.LoopEnabled {
+		t.Fatal("loop not enabled by master toggle")
+	}
+	// The loop reset is an ordinary play control at position 0.
+	sync, ok, _ := r.applyControl("alice", ControlMsg{Type: MsgControl, Action: ActionPlay, PositionMs: 0}, now)
+	if !ok || !sync.Playing || sync.PositionMs != 0 || !sync.LoopEnabled {
+		t.Fatalf("loop reset = %+v, ok=%v", sync, ok)
+	}
+	if ok, _ := r.applyLoop("alice", false); !ok {
+		t.Fatal("master loop disable rejected")
+	}
+	if st := r.currentSync(); st.LoopEnabled {
+		t.Fatal("loop not disabled by master")
+	}
+}
+
 func TestChangeVideoResetsPosition(t *testing.T) {
 	r := testRoom()
 	r.join("alice", "")

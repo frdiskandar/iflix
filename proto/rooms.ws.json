@@ -27,6 +27,11 @@
       "allow_all_control": "boolean (master only)",
       "client_msg_id": "string, optional"
     },
+    "loop": {
+      "type": "loop",
+      "loop_enabled": "boolean (master only)",
+      "client_msg_id": "string, optional"
+    },
     "chat": {
       "type": "chat",
       "text": "string 1-500 chars",
@@ -42,6 +47,7 @@
       "video_id": "youtube id when youtube, else the (possibly normalized) video_url",
       "embed_note": "embed = generic third-party iframe (e.g. playmogo /e/ links); the room cannot drive playback inside it, state is informational only",
       "allow_all": "permission toggle mirror",
+      "loop_enabled": "loop toggle mirror; when true the master restarts the room (control play at position_ms=0) when its player ends — never a local <video> loop",
       "position_ms": "integer",
       "playing": "boolean",
       "updated_at": "server unix millis",
@@ -50,7 +56,7 @@
     "members": { "type": "members", "members": [{ "username": "string", "is_master": "boolean" }] },
     "history": { "type": "history", "messages": "last <=50 chat messages" },
     "chat": { "type": "chat", "username": "string", "text": "string", "at": "server unix millis", "seq": "uint" },
-    "notice": { "type": "notice", "kind": "join | leave | master | permission", "text": "string" },
+    "notice": { "type": "notice", "kind": "join | leave | master | permission | loop", "text": "string" },
     "error": { "type": "error", "code": "forbidden | bad_action | bad_video_url | bad_message | bad_username | not_found", "text": "string" }
   },
   "rest": {

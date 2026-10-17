@@ -7,6 +7,7 @@ import { effectiveSource, normalizeVideoUrl } from './videoLinks.ts'
 
 interface VideoStageProps {
   state: RoomPlayback | null
+  isMaster: boolean
   canControl: boolean
   control: (action: ControlAction, opts?: { videoUrl?: string; positionMs?: number; force?: boolean }) => boolean
 }
@@ -20,7 +21,7 @@ function fmt(ms: number): string {
   return `${h > 0 ? `${h}:` : ''}${mm}:${String(sec).padStart(2, '0')}`
 }
 
-export default function VideoStage({ state, canControl, control }: VideoStageProps) {
+export default function VideoStage({ state, isMaster, canControl, control }: VideoStageProps) {
   const player = useRef<PlayerHandle | null>(null)
   const screenRef = useRef<HTMLDivElement>(null)
   const appliedVersion = useRef(-1)
@@ -83,6 +84,13 @@ export default function VideoStage({ state, canControl, control }: VideoStagePro
   }
 
   const onEnded = () => {
+    // Loop restarts the room through the server (master only): a local
+    // <video> loop would leave state_sync stale and make the drift
+    // corrector bounce the player around the end of the video.
+    if (state?.loop_enabled) {
+      if (isMaster) control('play', { positionMs: 0, force: true })
+      return
+    }
     const d = player.current?.durationMs()
     if (canControl) control('pause', { positionMs: d ?? undefined, force: true })
   }
@@ -193,6 +201,9 @@ export default function VideoStage({ state, canControl, control }: VideoStagePro
       </form>
       {isEmbed ? (
         <p className="room-hint">Mode embed: isi iframe berjalan sendiri — play/pause/seek room hanya tercatat sebagai status, tidak mengendalikan iframe.</p>
+      ) : null}
+      {isEmbed && state?.loop_enabled ? (
+        <p className="room-hint">Loop tidak tersedia untuk mode embed — iframe tidak bisa dijalankan ulang oleh room.</p>
       ) : null}
       {!canControl ? <p className="room-hint">Hanya master room yang bisa mengontrol. Minta master mengaktifkan izin semua user.</p> : null}
     </section>

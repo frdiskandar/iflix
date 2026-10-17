@@ -53,6 +53,7 @@ type Room struct {
 	mu         sync.Mutex
 	master     string
 	allowAll   bool
+	loop       bool
 	state      PlaybackState
 	members    []string // join order; first non-master is transfer target
 	chat       []ChatMsg
@@ -212,6 +213,22 @@ func (r *Room) applyPermission(username string, allow bool) (bool, string) {
 	return true, ""
 }
 
+// applyLoop flips the room loop toggle. Master only. While enabled the
+// master restarts the room (play control at position 0) when its player
+// ends; the reset travels as a normal state_sync broadcast so every
+// client's baseline restarts together.
+func (r *Room) applyLoop(username string, enabled bool) (bool, string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if !r.isMasterLocked(username) {
+		return false, "forbidden"
+	}
+	r.loop = enabled
+	r.touchLocked()
+	return true, ""
+}
+
 // addChat appends a chat line, stamping server time and a sequence
 // number, keeping only the newest chatHistoryCap lines.
 func (r *Room) addChat(username, text string, now time.Time) (ChatMsg, bool) {
@@ -264,15 +281,16 @@ func (r *Room) currentSync() StateSyncMsg {
 // stateSyncLocked builds the authoritative broadcast. Caller must hold mu.
 func (r *Room) stateSyncLocked() StateSyncMsg {
 	return StateSyncMsg{
-		Type:       MsgStateSync,
-		VideoURL:   r.state.VideoURL,
-		VideoType:  r.state.VideoType,
-		VideoID:    r.state.VideoID,
-		AllowAll:   r.allowAll,
-		PositionMs: r.state.PositionMs,
-		Playing:    r.state.Playing,
-		UpdatedAt:  r.state.UpdatedAt,
-		Version:    r.state.Version,
+		Type:        MsgStateSync,
+		VideoURL:    r.state.VideoURL,
+		VideoType:   r.state.VideoType,
+		VideoID:     r.state.VideoID,
+		AllowAll:    r.allowAll,
+		LoopEnabled: r.loop,
+		PositionMs:  r.state.PositionMs,
+		Playing:     r.state.Playing,
+		UpdatedAt:   r.state.UpdatedAt,
+		Version:     r.state.Version,
 	}
 }
 

@@ -46,7 +46,7 @@ export default function RoomPage() {
     )
   }
 
-  const { phase, selfName, members, isMaster, canControl, state, chats, notices, control, chat, setPermission, reconnect, lastSend } = room
+  const { phase, selfName, members, isMaster, canControl, state, chats, notices, control, chat, setPermission, setLoop, reconnect, lastSend } = room
 
   const phaseText =
     phase === 'open' ? 'Terhubung' : phase === 'reconnecting' ? 'Terputus — mencoba lagi…' : phase === 'connecting' ? 'Menghubungkan…' : 'Terputus'
@@ -90,7 +90,7 @@ export default function RoomPage() {
         </p>
       ) : null}
 
-      <VideoStage state={state} canControl={canControl} control={control} />
+      <VideoStage state={state} isMaster={isMaster} canControl={canControl} control={control} />
 
       <div className="room-side">
         <section className="room-members" aria-label="Anggota room">
@@ -107,17 +107,35 @@ export default function RoomPage() {
             ))}
           </ul>
           {isMaster ? (
-            <label className="room-permit">
-              <input
-                type="checkbox"
-                checked={state?.allow_all ?? false}
-                onChange={(e) => setPermission(e.target.checked)}
-              />
-              Semua user boleh kontrol video
-            </label>
+            <>
+              <label className="room-permit">
+                <input
+                  type="checkbox"
+                  checked={state?.allow_all ?? false}
+                  onChange={(e) => setPermission(e.target.checked)}
+                />
+                Semua user boleh kontrol video
+              </label>
+              <label
+                className="room-permit"
+                title={state?.video_type === 'embed' ? 'Mode embed tidak bisa dijalankan ulang oleh room' : undefined}
+              >
+                <input
+                  type="checkbox"
+                  checked={state?.loop_enabled ?? false}
+                  disabled={state?.video_type === 'embed'}
+                  onChange={(e) => setLoop(e.target.checked)}
+                />
+                🔁 Loop video
+              </label>
+            </>
           ) : (
             <p className="room-hint">
-              {state?.allow_all ? 'Semua user boleh mengontrol video.' : 'Mode master: hanya master yang bisa mengontrol.'}
+              {state?.loop_enabled
+                ? '🔁 Loop video aktif — video mulai ulang dari awal setelah selesai.'
+                : state?.allow_all
+                  ? 'Semua user boleh mengontrol video.'
+                  : 'Mode master: hanya master yang bisa mengontrol.'}
             </p>
           )}
           <button className="btn-retry" type="button" onClick={() => navigate('/rooms')}>

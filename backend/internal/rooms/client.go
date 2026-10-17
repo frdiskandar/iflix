@@ -118,6 +118,24 @@ func (c *Client) handle(raw []byte) {
 		c.room.emit(NoticeMsg{Type: MsgNotice, Kind: "permission", Text: permissionText(m.AllowAllControl)})
 		// Emit a fresh full state so everyone converges on the toggle.
 		c.room.emit(c.room.currentSync())
+	case MsgLoop:
+		var m LoopMsg
+		if err := json.Unmarshal(raw, &m); err != nil {
+			c.sendError("bad_message", "Pengaturan loop tidak valid.")
+			return
+		}
+		if dup := c.room.markSeen(m.ClientMsgID); dup {
+			return
+		}
+		log.Printf("rooms: loop user=%q enabled=%v room=%s", c.username, m.LoopEnabled, c.room.Code)
+		ok, code := c.room.applyLoop(c.username, m.LoopEnabled)
+		if !ok {
+			c.sendError(code, "Hanya master room yang boleh mengubah loop.")
+			return
+		}
+		c.room.emit(NoticeMsg{Type: MsgNotice, Kind: "loop", Text: loopText(m.LoopEnabled)})
+		// Emit a fresh full state so everyone converges on the toggle.
+		c.room.emit(c.room.currentSync())
 	case MsgChat:
 		var m ChatIn
 		if err := json.Unmarshal(raw, &m); err != nil {
@@ -165,4 +183,11 @@ func permissionText(allow bool) string {
 		return "Master mengizinkan semua user mengontrol video."
 	}
 	return "Kontrol dikembalikan ke master room."
+}
+
+func loopText(enabled bool) string {
+	if enabled {
+		return "Master mengaktifkan loop video."
+	}
+	return "Loop video dinonaktifkan."
 }

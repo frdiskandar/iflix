@@ -4,7 +4,7 @@ package rooms
 // every envelope carries a `type` discriminator. This file mirrors
 // proto/rooms.ws.json — update both in the same change.
 //
-// Client -> server: join, control, chat, permission.
+// Client -> server: join, control, chat, permission, loop.
 // Server -> clients: joined, state_sync, members, chat, history, notice, error.
 
 const (
@@ -13,6 +13,7 @@ const (
 	MsgControl    = "control"
 	MsgChat       = "chat"
 	MsgPermission = "permission"
+	MsgLoop       = "loop"
 
 	// Server -> clients.
 	MsgJoined    = "joined"
@@ -69,6 +70,16 @@ type PermissionMsg struct {
 	ClientMsgID     string `json:"client_msg_id,omitempty"`
 }
 
+// LoopMsg toggles room video looping. Master only. When enabled, the
+// master's player restarts the room on ended via an ordinary play
+// control at position_ms=0 (never a local <video> loop, which would
+// desync the drift corrector).
+type LoopMsg struct {
+	Type        string `json:"type"`
+	LoopEnabled bool   `json:"loop_enabled"`
+	ClientMsgID string `json:"client_msg_id,omitempty"`
+}
+
 // ChatIn is a client chat message.
 type ChatIn struct {
 	Type        string `json:"type"`
@@ -101,11 +112,14 @@ type StateSyncMsg struct {
 	VideoID   string `json:"video_id,omitempty"`
 	// AllowAll mirrors the room permission toggle so every client can
 	// render controls enabled/disabled without extra round-trips.
-	AllowAll   bool   `json:"allow_all"`
-	PositionMs int64  `json:"position_ms"`
-	Playing    bool   `json:"playing"`
-	UpdatedAt  int64  `json:"updated_at"`
-	Version    uint64 `json:"version"`
+	AllowAll bool `json:"allow_all"`
+	// LoopEnabled mirrors the room loop toggle (master restarts the
+	// room at position 0 when its player ends).
+	LoopEnabled bool   `json:"loop_enabled"`
+	PositionMs  int64  `json:"position_ms"`
+	Playing     bool   `json:"playing"`
+	UpdatedAt   int64  `json:"updated_at"`
+	Version     uint64 `json:"version"`
 }
 
 // ChatMsg is a broadcast chat line stamped with server time.

@@ -20,6 +20,7 @@ export interface RoomPlayback {
   video_type: string
   video_id?: string
   allow_all: boolean
+  loop_enabled: boolean
   position_ms: number
   playing: boolean
   updated_at: number
@@ -127,6 +128,7 @@ export function useRoomSocket(code: string, username: string) {
               video_type: String(m.video_type ?? 'none'),
               video_id: typeof m.video_id === 'string' ? m.video_id : undefined,
               allow_all: m.allow_all === true,
+              loop_enabled: m.loop_enabled === true,
               position_ms: Number(m.position_ms ?? 0),
               playing: m.playing === true,
               updated_at: Number(m.updated_at ?? Date.now()),
@@ -282,8 +284,13 @@ export function useRoomSocket(code: string, username: string) {
     [send],
   )
 
+  const setLoop = useCallback(
+    (enabled: boolean) => send({ type: 'loop', loop_enabled: enabled, client_msg_id: newMsgId() }),
+    [send],
+  )
+
   const isMaster = members.some((m) => m.username === selfName && m.is_master)
   const canControl = isMaster || (state?.allow_all ?? false)
 
-  return { phase, selfName, members, isMaster, canControl, state, chats, notices, error, control, chat, setPermission, reconnect, lastSend }
+  return { phase, selfName, members, isMaster, canControl, state, chats, notices, error, control, chat, setPermission, setLoop, reconnect, lastSend }
 }
