@@ -10,6 +10,7 @@ export default function RoomPage() {
   const navigate = useNavigate()
   const [name, setName] = useState(() => loadUsername())
   const [draft, setDraft] = useState(name)
+  const [copied, setCopied] = useState(false)
 
   const room = useRoomSocket(code.toUpperCase(), name)
 
@@ -68,7 +69,6 @@ export default function RoomPage() {
         </h1>
         <span className={`room-conn room-conn-${phase}`} role="status" title={sendText || undefined}>
           {phaseText}
-          {sendText ? <small>{sendText}</small> : null}
         </span>
         {phase !== 'open' ? (
           <button type="button" onClick={reconnect}>
@@ -78,10 +78,16 @@ export default function RoomPage() {
         <button
           type="button"
           onClick={() => {
-            void navigator.clipboard?.writeText(window.location.href).catch(() => {})
+            void navigator.clipboard
+              ?.writeText(window.location.href)
+              .then(() => {
+                setCopied(true)
+                window.setTimeout(() => setCopied(false), 1500)
+              })
+              .catch(() => {})
           }}
         >
-          Salin link
+          {copied ? '✓ Tersalin' : 'Salin link'}
         </button>
       </div>
       {phase !== 'open' ? (
@@ -90,7 +96,7 @@ export default function RoomPage() {
         </p>
       ) : null}
 
-      <VideoStage state={state} isMaster={isMaster} canControl={canControl} control={control} />
+      <VideoStage state={state} isMaster={isMaster} canControl={canControl} control={control} setLoop={setLoop} />
 
       <div className="room-side">
         <section className="room-members" aria-label="Anggota room">
@@ -99,43 +105,34 @@ export default function RoomPage() {
           </h3>
           <ul>
             {members.map((m) => (
-              <li key={m.username}>
-                {m.username}
-                {m.username === selfName ? ' (kamu)' : ''}
-                {m.is_master ? ' 👑' : ''}
+              <li key={m.username} className="room-member">
+                <span className="room-member-avatar" aria-hidden="true">
+                  {m.username.slice(0, 1).toUpperCase()}
+                </span>
+                <span className="room-member-name">
+                  {m.username}
+                  {m.username === selfName ? ' (kamu)' : ''}
+                </span>
+                {m.is_master ? (
+                  <span className="room-member-master" title="Master room">
+                    👑
+                  </span>
+                ) : null}
               </li>
             ))}
           </ul>
           {isMaster ? (
-            <>
-              <label className="room-permit">
-                <input
-                  type="checkbox"
-                  checked={state?.allow_all ?? false}
-                  onChange={(e) => setPermission(e.target.checked)}
-                />
-                Semua user boleh kontrol video
-              </label>
-              <label
-                className="room-permit"
-                title={state?.video_type === 'embed' ? 'Mode embed tidak bisa dijalankan ulang oleh room' : undefined}
-              >
-                <input
-                  type="checkbox"
-                  checked={state?.loop_enabled ?? false}
-                  disabled={state?.video_type === 'embed'}
-                  onChange={(e) => setLoop(e.target.checked)}
-                />
-                🔁 Loop video
-              </label>
-            </>
+            <label className="room-permit">
+              <input
+                type="checkbox"
+                checked={state?.allow_all ?? false}
+                onChange={(e) => setPermission(e.target.checked)}
+              />
+              Semua user boleh kontrol video
+            </label>
           ) : (
             <p className="room-hint">
-              {state?.loop_enabled
-                ? '🔁 Loop video aktif — video mulai ulang dari awal setelah selesai.'
-                : state?.allow_all
-                  ? 'Semua user boleh mengontrol video.'
-                  : 'Mode master: hanya master yang bisa mengontrol.'}
+              {state?.allow_all ? 'Semua user boleh mengontrol video.' : 'Mode master: hanya master yang bisa mengontrol.'}
             </p>
           )}
           <button className="btn-retry" type="button" onClick={() => navigate('/rooms')}>

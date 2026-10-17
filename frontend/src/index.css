@@ -181,7 +181,7 @@ nav a:hover {
   border-top-right-radius: 50% 56px;
 }
 
-.hero-curve::before {
+/* .hero-curve::before {
   content: '';
   position: absolute;
   top: 0;
@@ -191,7 +191,7 @@ nav a:hover {
   background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.25), transparent);
   border-top-left-radius: 50% 100%;
   border-top-right-radius: 50% 100%;
-}
+} */
 
 .hero-curve + .content-section {
   padding-top: 0;
@@ -572,8 +572,6 @@ nav a:hover {
 .rooms-actions button,
 .room-linkform button,
 .room-chat-form button,
-.room-controls button,
-.room-topbar button,
 .watch-gate .btn {
   padding: 0.6rem 1.2rem;
   border-radius: 6px;
@@ -586,10 +584,25 @@ nav a:hover {
 
 .rooms-actions button:disabled,
 .room-linkform button:disabled,
-.room-chat-form button:disabled,
-.room-controls button:disabled {
+.room-chat-form button:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+.room-topbar button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  color: var(--text-color);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.room-topbar button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
 .room-linkform {
@@ -697,8 +710,9 @@ nav a:hover {
 .room-unmute {
   position: absolute;
   left: 50%;
-  bottom: 1rem;
+  bottom: 5.5rem;
   transform: translateX(-50%);
+  z-index: 3;
   padding: 0.6rem 1.2rem;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.4);
@@ -707,29 +721,267 @@ nav a:hover {
   cursor: pointer;
 }
 
+/* Netflix-style control bar: overlay inside the screen (also in fullscreen). */
 .room-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 2.75rem 1rem 0.6rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0));
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.room-controls button {
-  background: #2a2a2a;
+.room-controls-visible {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.room-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.room-controls-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.room-ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.room-ctrl-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.06);
+}
+
+.room-ctrl-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.room-ctrl-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.room-ctrl-active {
+  color: var(--netflix-red);
+}
+
+.room-volume {
+  display: flex;
+  align-items: center;
+}
+
+.room-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0;
+  height: 4px;
+  margin: 0;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--netflix-red) var(--vol-pct, 0%),
+    rgba(255, 255, 255, 0.35) var(--vol-pct, 0%)
+  );
+  cursor: pointer;
+  opacity: 0;
+  transition: width 0.2s ease, opacity 0.2s ease, height 0.15s ease;
+}
+
+.room-volume:hover .room-volume-slider,
+.room-volume:focus-within .room-volume-slider {
+  width: 84px;
+  margin-left: 0.35rem;
+  opacity: 1;
+}
+
+.room-volume-slider:hover {
+  height: 6px;
+}
+
+.room-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 50%;
+  background: var(--netflix-red);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.room-volume:hover .room-volume-slider::-webkit-slider-thumb,
+.room-volume:focus-within .room-volume-slider::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+.room-volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 50%;
+  background: var(--netflix-red);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.room-volume:hover .room-volume-slider::-moz-range-thumb,
+.room-volume:focus-within .room-volume-slider::-moz-range-thumb {
+  opacity: 1;
+}
+
+.room-volume-slider:disabled {
+  opacity: 0 !important;
+  width: 0;
+  cursor: default;
+}
+
+/* Touch devices have no hover: keep the volume slider reachable. */
+@media (max-width: 800px) {
+  .room-volume-slider,
+  .room-volume:hover .room-volume-slider,
+  .room-volume:focus-within .room-volume-slider {
+    width: 72px;
+    margin-left: 0.35rem;
+    opacity: 1;
+  }
 }
 
 .room-time {
+  margin-left: 0.35rem;
   font-variant-numeric: tabular-nums;
-  color: var(--secondary-text);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.9);
   white-space: nowrap;
 }
 
+.room-time-remain {
+  margin-left: 0.4rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
 .room-seek {
-  flex: 1;
-  min-width: 160px;
-  accent-color: var(--netflix-red);
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  margin: 0;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--netflix-red) var(--seek-pct, 0%),
+    rgba(255, 255, 255, 0.35) var(--seek-pct, 0%)
+  );
+  cursor: pointer;
+  transition: height 0.15s ease;
+}
+
+.room-seek:hover,
+.room-seek:focus-visible {
+  height: 6px;
+}
+
+.room-seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 50%;
+  background: var(--netflix-red);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.room-seek:hover::-webkit-slider-thumb,
+.room-seek:focus-visible::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+.room-seek::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 50%;
+  background: var(--netflix-red);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.room-seek:hover::-moz-range-thumb,
+.room-seek:focus-visible::-moz-range-thumb {
+  opacity: 1;
+}
+
+.room-seek:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.room-bigplay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.room-bigplay:hover {
+  background: var(--netflix-red);
+  border-color: var(--netflix-red);
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.room-screen:fullscreen .room-controls {
+  padding: 4rem 2.5rem 1.5rem;
+}
+
+.room-screen:fullscreen .room-ctrl-btn {
+  width: 48px;
+  height: 48px;
+}
+
+.room-screen:fullscreen .room-volume:hover .room-volume-slider,
+.room-screen:fullscreen .room-volume:focus-within .room-volume-slider {
+  width: 120px;
 }
 
 .room-linkform {
@@ -779,6 +1031,38 @@ nav a:hover {
   flex-direction: column;
   gap: 0.3rem;
   margin-bottom: 0.8rem;
+}
+
+.room-member {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.25rem 0;
+  font-size: 0.95rem;
+}
+
+.room-member-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3d3d3d, #1f1f1f);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.room-member-name {
+  overflow-wrap: anywhere;
+}
+
+.room-member-master {
+  margin-left: auto;
+  font-size: 0.85rem;
 }
 
 .room-permit {

@@ -9,6 +9,8 @@ export interface PlayerHandle {
   getTimeMs(): number
   durationMs(): number | null
   isPaused(): boolean
+  /** Local-only (not room-synced): 0..1 volume plus mute flag. */
+  setVolume(volume: number, muted: boolean): void
 }
 
 interface DirectProps {
@@ -39,6 +41,12 @@ const DirectVideo = forwardRef<PlayerHandle, DirectProps>(function DirectVideo({
     },
     isPaused() {
       return el.current?.paused ?? true
+    },
+    setVolume(volume: number, muted: boolean) {
+      const v = el.current
+      if (!v) return
+      v.volume = Math.min(1, Math.max(0, volume))
+      v.muted = muted
     },
   }))
 

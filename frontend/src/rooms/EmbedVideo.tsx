@@ -31,6 +31,9 @@ const EmbedVideo = forwardRef<PlayerHandle, EmbedProps>(function EmbedVideo({ sr
     isPaused() {
       return !playingRef.current
     },
+    setVolume() {
+      // Third-party iframe: no volume API exposed.
+    },
   }))
 
   return (

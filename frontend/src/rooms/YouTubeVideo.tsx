@@ -10,6 +10,9 @@ interface YTPlayer {
   getCurrentTime(): number
   getDuration(): number
   getPlayerState(): number
+  setVolume(percent: number): void
+  mute(): void
+  unMute(): void
   destroy(): void
 }
 
@@ -102,6 +105,15 @@ const YouTubeVideo = forwardRef<PlayerHandle, YouTubeProps>(function YouTubeVide
         return s !== 1 && s !== 3
       } catch {
         return true
+      }
+    },
+    setVolume(volume: number, muted: boolean) {
+      try {
+        player.current?.setVolume(Math.round(Math.min(1, Math.max(0, volume)) * 100))
+        if (muted) player.current?.mute()
+        else player.current?.unMute()
+      } catch {
+        // player not ready yet — VideoStage re-applies on the next change
       }
     },
   }))
